@@ -1,0 +1,9 @@
+.git
+.github
+vendor
+tmp/cache/*
+tmp/logs/*
+logs/*
+.env
+config/app_local.php
+node_modules
