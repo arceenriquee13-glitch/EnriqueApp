@@ -6,14 +6,17 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
     libonig-dev \
-    && docker-php-ext-install intl pdo_mysql zip mbstring
+    && docker-php-ext-install intl pdo_mysql zip mbstring \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN a2enmod rewrite
+RUN a2dismod mpm_event mpm_worker || true
+RUN a2enmod mpm_prefork rewrite
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/webroot
 
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
