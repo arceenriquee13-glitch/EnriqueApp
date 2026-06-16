@@ -48,28 +48,33 @@ class ArticlesController extends AppController
      * @return \Cake\Http\Response|null|void Redirects on successful add, renders view otherwise.
      */
     public function add()
-    {
-        $article = $this->Articles->newEmptyEntity();
+{
+    $article = $this->Articles->newEmptyEntity();
 
-        $this->Authorization->authorize($article);
+    $this->Authorization->authorize($article);
 
-        if ($this->request->is('post')) {
-            $article = $this->Articles->patchEntity($article, $this->request->getData());
+    if ($this->request->is('post')) {
+        $article = $this->Articles->patchEntity($article, $this->request->getData());
 
-            if ($this->Articles->save($article)) {
-                $this->Flash->success(__('The article has been saved.'));
+        /*
+         * El user_id se toma del usuario que inició sesión.
+         */
+        $identity = $this->request->getAttribute('identity');
+        $article->user_id = $identity->getIdentifier();
 
-                return $this->redirect(['action' => 'index']);
-            }
+        if ($this->Articles->save($article)) {
+            $this->Flash->success(__('Your article has been saved.'));
 
-            $this->Flash->error(__('The article could not be saved. Please, try again.'));
+            return $this->redirect(['action' => 'index']);
         }
 
-        $users = $this->Articles->Users->find('list', limit: 200)->all();
-        $tags = $this->Articles->Tags->find('list', limit: 200)->all();
-
-        $this->set(compact('article', 'users', 'tags'));
+        $this->Flash->error(__('Unable to add your article.'));
     }
+
+    $tags = $this->Articles->Tags->find('list')->all();
+
+    $this->set(compact('article', 'tags'));
+}
 
     /**
      * Edit method
