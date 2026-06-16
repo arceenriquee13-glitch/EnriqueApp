@@ -28,11 +28,16 @@ use Cake\ORM\Locator\TableLocator;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Psr\Http\Message\ServerRequestInterface;
-
-class Application extends BaseApplication implements AuthenticationServiceProviderInterface
+use Authorization\AuthorizationService;
+use Authorization\AuthorizationServiceInterface;
+use Authorization\AuthorizationServiceProviderInterface;
+use Authorization\Middleware\AuthorizationMiddleware;
+use Authorization\Policy\OrmResolver;
+class Application extends BaseApplication implements AuthenticationServiceProviderInterface, AuthorizationServiceProviderInterface
 {
     public function bootstrap(): void
     {
+        $this->addPlugin('Authorization');
         parent::bootstrap();
 
         FactoryLocator::add('Table', (new TableLocator())->allowFallbackClass(false));
@@ -57,7 +62,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
                 'httponly' => true,
             ]))
 
-            ->add(new AuthenticationMiddleware($this));
+            ->add(new AuthenticationMiddleware($this))
+            ->add(new AuthorizationMiddleware($this));
 
         return $middlewareQueue;
     }
@@ -109,4 +115,10 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
         return $service;
     }
+    public function getAuthorizationService(ServerRequestInterface $request): AuthorizationServiceInterface
+{
+    $resolver = new OrmResolver();
+
+    return new AuthorizationService($resolver);
+}
 }

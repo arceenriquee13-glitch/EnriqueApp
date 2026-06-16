@@ -17,8 +17,11 @@ class ArticlesController extends AppController
      */
     public function index()
     {
+        $this->Authorization->skipAuthorization();
+
         $query = $this->Articles->find()
-            ->contain(['Users']);
+            ->contain(['Users', 'Tags']);
+
         $articles = $this->paginate($query);
 
         $this->set(compact('articles'));
@@ -29,11 +32,13 @@ class ArticlesController extends AppController
      *
      * @param string|null $id Article id.
      * @return \Cake\Http\Response|null|void Renders view
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function view($id = null)
     {
+        $this->Authorization->skipAuthorization();
+
         $article = $this->Articles->get($id, contain: ['Users', 'Tags']);
+
         $this->set(compact('article'));
     }
 
@@ -45,17 +50,24 @@ class ArticlesController extends AppController
     public function add()
     {
         $article = $this->Articles->newEmptyEntity();
+
+        $this->Authorization->authorize($article);
+
         if ($this->request->is('post')) {
             $article = $this->Articles->patchEntity($article, $this->request->getData());
+
             if ($this->Articles->save($article)) {
                 $this->Flash->success(__('The article has been saved.'));
 
                 return $this->redirect(['action' => 'index']);
             }
+
             $this->Flash->error(__('The article could not be saved. Please, try again.'));
         }
+
         $users = $this->Articles->Users->find('list', limit: 200)->all();
         $tags = $this->Articles->Tags->find('list', limit: 200)->all();
+
         $this->set(compact('article', 'users', 'tags'));
     }
 
@@ -64,22 +76,28 @@ class ArticlesController extends AppController
      *
      * @param string|null $id Article id.
      * @return \Cake\Http\Response|null|void Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function edit($id = null)
     {
         $article = $this->Articles->get($id, contain: ['Tags']);
+
+        $this->Authorization->authorize($article);
+
         if ($this->request->is(['patch', 'post', 'put'])) {
             $article = $this->Articles->patchEntity($article, $this->request->getData());
+
             if ($this->Articles->save($article)) {
                 $this->Flash->success(__('The article has been saved.'));
 
                 return $this->redirect(['action' => 'index']);
             }
+
             $this->Flash->error(__('The article could not be saved. Please, try again.'));
         }
+
         $users = $this->Articles->Users->find('list', limit: 200)->all();
         $tags = $this->Articles->Tags->find('list', limit: 200)->all();
+
         $this->set(compact('article', 'users', 'tags'));
     }
 
@@ -88,12 +106,15 @@ class ArticlesController extends AppController
      *
      * @param string|null $id Article id.
      * @return \Cake\Http\Response|null Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
      */
     public function delete($id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
+
         $article = $this->Articles->get($id);
+
+        $this->Authorization->authorize($article);
+
         if ($this->Articles->delete($article)) {
             $this->Flash->success(__('The article has been deleted.'));
         } else {

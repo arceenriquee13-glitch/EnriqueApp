@@ -19,6 +19,7 @@ class UsersController extends AppController
 
 public function login()
 {
+    $this->Authorization->skipAuthorization();
     $result = $this->Authentication->getResult();
 
     if ($result && $result->isValid()) {
@@ -37,6 +38,7 @@ public function login()
 
 public function logout()
 {
+    $this->Authorization->skipAuthorization();
     $result = $this->Authentication->getResult();
 
     if ($result && $result->isValid()) {
@@ -81,6 +83,7 @@ public function logout()
      */
     public function add()
     {
+        $this->Authorization->skipAuthorization();
         $user = $this->Users->newEmptyEntity();
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->getData());
