@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace App\Controller;
-
+use Cake\Event\EventInterface;
 /**
  * Users Controller
  *
@@ -10,6 +10,44 @@ namespace App\Controller;
  */
 class UsersController extends AppController
 {
+    public function beforeFilter(EventInterface $event): void
+{
+    parent::beforeFilter($event);
+
+    $this->Authentication->allowUnauthenticated(['login', 'add']);
+}
+
+public function login()
+{
+    $result = $this->Authentication->getResult();
+
+    if ($result && $result->isValid()) {
+        $target = $this->Authentication->getLoginRedirect() ?? [
+            'controller' => 'Articles',
+            'action' => 'index',
+        ];
+
+        return $this->redirect($target);
+    }
+
+    if ($this->request->is('post')) {
+        $this->Flash->error(__('Invalid username or password'));
+    }
+}
+
+public function logout()
+{
+    $result = $this->Authentication->getResult();
+
+    if ($result && $result->isValid()) {
+        $this->Authentication->logout();
+
+        return $this->redirect([
+            'controller' => 'Users',
+            'action' => 'login',
+        ]);
+    }
+}
     /**
      * Index method
      *
